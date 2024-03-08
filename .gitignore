@@ -1,160 +1,137 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+from tkinter import *
+from tkinter import messagebox
+import sqlite3 as sql
 
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+def add_task():  
+    task_string = task_field.get()  
+    if len(task_string) == 0:  
+        messagebox.showinfo('Error', 'Field is Empty.')  
+    else:    
+        tasks.append(task_string)   
+        the_cursor.execute('insert into tasks values (?)', (task_string ,))    
+        list_update()    
+        task_field.delete(0, 'end')  
+    
+def list_update():    
+    clear_list()    
+    for task in tasks:    
+        task_listbox.insert('end', task)  
+  
+def delete_task():  
+    try:  
+        the_value = task_listbox.get(task_listbox.curselection())    
+        if the_value in tasks:  
+            tasks.remove(the_value)    
+            list_update()   
+            the_cursor.execute('delete from tasks where title = ?', (the_value,))  
+    except:   
+        messagebox.showinfo('Error', 'No Task Selected. Cannot Delete.')        
+  
+def delete_all_tasks():  
+    message_box = messagebox.askyesno('Delete All', 'Are you sure?')  
+    if message_box == True:    
+        while(len(tasks) != 0):    
+            tasks.pop()    
+        the_cursor.execute('delete from tasks')   
+        list_update()  
+   
+def clear_list():   
+    task_listbox.delete(0, 'end')  
+  
+def close():    
+    print(tasks)   
+    guiWindow.destroy()  
+    
+def retrieve_database():    
+    while(len(tasks) != 0):    
+        tasks.pop()    
+    for row in the_cursor.execute('select title from tasks'):    
+        tasks.append(row[0])  
+   
+if __name__ == "__main__":   
+    guiWindow = Tk()   
+    guiWindow.title("To-Do List ")  
+    guiWindow.geometry("665x400+550+250")   
+    guiWindow.resizable(0, 0)  
+    guiWindow.configure(bg = "#B5E5CF")  
+   
+    the_connection = sql.connect('listOfTasks.db')   
+    the_cursor = the_connection.cursor()   
+    the_cursor.execute('create table if not exists tasks (title text)')  
+    
+    tasks = []  
+        
+    functions_frame = Frame(guiWindow, bg = "#8EE5EE") 
+    
+    functions_frame.pack(side = "top", expand = True, fill = "both")  
+ 
+    task_label = Label( functions_frame,text = "TO-DO-LIST \n Enter the Task Title:",  
+        font = ("arial", "14", "bold"),  
+        background = "#8EE5EE", 
+        foreground="#FF6103"
+    )    
+    task_label.place(x = 20, y = 30)  
+        
+    task_field = Entry(  
+        functions_frame,  
+        font = ("Arial", "14"),  
+        width = 42,  
+        foreground="black",
+        background = "white",  
+    )    
+    task_field.place(x = 180, y = 30)  
+    
+    add_button =Button(  
+        functions_frame,  
+        text = "Add",  
+        width = 15,
+        bg='#D4AC0D',font=("arial", "14", "bold"),
+        command = add_task,
+        
+    )  
+    del_button = Button(  
+        functions_frame,  
+        text = "Remove",  
+        width = 15,
+        bg='#D4AC0D', font=("arial", "14", "bold"),
+        command = delete_task,  
+    )  
+    del_all_button = Button(  
+        functions_frame,  
+        text = "Delete All",  
+        width = 15,
+        font=("arial", "14", "bold"),
+        bg='#D4AC0D',
+        command = delete_all_tasks  
+    )
+    
+    exit_button = Button(  
+        functions_frame,  
+        text = "Exit / Close",  
+        width = 52,
+        bg='#D4AC0D',  font=("arial", "14", "bold"),
+        command = close  
+    )    
+    add_button.place(x = 18, y = 80,)  
+    del_button.place(x = 240, y = 80)  
+    del_all_button.place(x = 460, y = 80)  
+    exit_button.place(x = 17, y = 330)  
+    
+    task_listbox = Listbox(  
+        functions_frame,  
+        width = 70,  
+        height = 9,  
+        font="bold",
+        selectmode = 'SINGLE',  
+        background = "WHITE",
+        foreground="BLACK",    
+        selectbackground = "#FF8C00",  
+        selectforeground="BLACK"
+    )    
+    task_listbox.place(x = 17, y = 140)  
+    
+    retrieve_database()  
+    list_update()    
+    guiWindow.mainloop()    
+    the_connection.commit()  
+    the_cursor.close()
